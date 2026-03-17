@@ -1,0 +1,98 @@
+[
+  {
+    "email": "11244329@st.neu.edu.vn",
+    "slug": "numpy-01-phan-tich-loi-nhuan-ban-hang-68dbc899fdd70279dba7dd24",
+    "solution": "import numpy as np\nprice = np.array([250,400,320,150,500])\ncost = np.array([180,290,250,90,370])\nqty = np.array([120,85,150,210,70])\nrevenue = price * qty\nprofit = revenue - cost\ntotal_profit = np.sum(profit)\ncount = np.sum(profit >= 10000)",
+    "error": null
+  },
+  {
+    "email": "11244329@st.neu.edu.vn",
+    "slug": "numpy-02-danh-gia-hieu-suat-kinh-doanh-68dbff0efdd70279dba81f6c",
+    "solution": "import numpy as np\nsales = np.array([[600,700,650,800],[500,550,600,620],[720,710,690,730],[400,450,500,520]])\navg_region = sales.mean(axis=1)\ntotal_quarter = sales.sum(axis=0)\nabove_target = total_quarter[total_quarter > 650]\ngrowth = (sales[:,3] - sales[:,0]) / sales[:,0] * 100",
+    "error": null
+  },
+  {
+    "email": "11244330@st.neu.edu.vn",
+    "slug": "numpy-01-phan-tich-loi-nhuan-ban-hang-68dbc899fdd70279dba7dd24",
+    "solution": "import numpy as np\nprice = np.array([250,400,320,150,500])\ncost = np.array([180,290,250,90,370])\nqty = np.array([120,85,150,210,70])\nrevenue = np.multiply(price, qty)\nprofit = np.subtract(revenue, cost)\ntotal_profit = profit.sum()\ncount = (profit >= 10000).sum()",
+    "error": null
+  },
+  {
+    "email": "11244330@st.neu.edu.vn",
+    "slug": "pandas-01-xu-ly-du-lieu-don-hang-68dc00c1fdd70279dba8260d",
+    "solution": "import pandas as pd\ndf = pd.DataFrame({\n 'MaDonHang':[1,2,3],\n 'TenSanPham':['Laptop','Chuot','Man hinh'],\n 'SoLuong':[2,5,1],\n 'DanhGia':[5,4,5]\n})\nprice_map = {'Laptop':18000,'Ban phim':500,'Chuot':350,'Man hinh':4500}\ndf['DonGia'] = df['TenSanPham'].map(price_map)\ndf['ThanhTien'] = df['SoLuong'] * df['DonGia']\ndf = df.sort_values(by='ThanhTien', ascending=False)",
+    "error": null
+  },
+  {
+    "email": "11244331@st.neu.edu.vn",
+    "slug": "numpy-01-phan-tich-loi-nhuan-ban-hang-68dbc899fdd70279dba7dd24",
+    "solution": "import numpy as np\nprice = np.array([250,400,320,150,500])\ncost = np.array([180,290,250,90,370])\nqty = np.array([120,85,150,210,70])\nprofit = price*qty - cost\ntotal_profit = profit.sum()\ncount = np.count_nonzero(profit >= 10000)",
+    "error": null
+  },
+  {
+    "email": "11244331@st.neu.edu.vn",
+    "slug": "pandas-02-phan-tich-du-lieu-nhan-su-68dc0359fdd70279dba82f6e",
+    "solution": "import pandas as pd\ndf = pd.DataFrame({\n 'Ten':['A','B','C'],\n 'PhongBan':['Kinh doanh','IT','Kinh doanh'],\n 'NamKinhNghiem':[5,2,4],\n 'LuongThang':[25000000,15000000,30000000]\n})\ncount_exp = (df['NamKinhNghiem'] > 3).sum()\ndf['ThuNhapNam'] = df['LuongThang'] * 12\ncount_sales = df[(df['PhongBan']=='Kinh doanh') & (df['ThuNhapNam'] > 250000000)].shape[0]",
+    "error": null
+  },
+  {
+    "email": "11244332@st.neu.edu.vn",
+    "slug": "numpy-01-phan-tich-loi-nhuan-ban-hang-68dbc899fdd70279dba7dd24",
+    "solution": "import numpy as np\nprice = np.array([250,400,320,150,500])\ncost = np.array([180,290,250,90,370])\nqty = np.array([120,85,150,210,70])\nrevenue = price * qty\nprofit = revenue - cost\ntotal_profit = np.men(profit)\ncount = np.sum(profit >= 10000)",
+    "error": "Exited with error status 1"
+  },
+  {
+    "email": "11244332@st.neu.edu.vn",
+    "slug": "numpy-02-danh-gia-hieu-suat-kinh-doanh-68dbff0efdd70279dba81f6c",
+    "solution": "import numpy as np\nsales = np.array([[600,700,650,800],[500,550,600,620],[720,710,690,730],[400,450,500,520]])\navg_region = sales.mean(axis=1)\ntotal_quarter = sales.sum(axis=1)\nabove_target = total_quarter[total_quarter > 650]\ngrowth = (sales[:,3] - sales[:,0]) / sales[:,0] * 100",
+    "error": null
+  },
+  {
+    "email": "11244333@st.neu.edu.vn",
+    "slug": "pandas-01-xu-ly-du-lieu-don-hang-68dc00c1fdd70279dba8260d",
+    "solution": "import pandas as pd\ndf = pd.DataFrame({\n 'MaDonHang':[1,2,3],\n 'TenSanPham':['Laptop','Chuột','Màn hình'],\n 'Soluong':[2,5,1],\n 'DanhGia':[5,4,5]\n})\nprice_map = {'Laptop':18000,'Bàn phím':500,'Chuột':350,'Màn hình':4500}\ndf['DonGia'] = df['TenSanPham'].map(price_map)\ndf['ThanhTien'] = df['Soluong'] * df['DonGia']\ndf = df.sort_value(by='ThanhTien', ascending=False)",
+    "error": "Exited with error status 1"
+  },
+  {
+    "email": "11244333@st.neu.edu.vn",
+    "slug": "pandas-02-phan-tich-du-lieu-nhan-su-68dc0359fdd70279dba82f6e",
+    "solution": "import pandas as pd\ndf = pd.DataFrame({\n 'Ten':['A','B','C'],\n 'PhongBan':['Kinh doanh','IT','Kinh doanh'],\n 'NamKinhNghiem':[5,2,4],\n 'LuongThang':[25000000,15000000,30000000]\n})\ncount_exp = len(df[df.NamKinhNghiem > 3])\ncount_sales = len(df[(df.PhongBan=='KinhDoanh') & (df.LuongThang*12 > 250000000)])",
+    "error": null
+  },
+  {
+    "email": "11244334@st.neu.edu.vn",
+    "slug": "numpy-01-phan-tich-loi-nhuan-ban-hang-68dbc899fdd70279dba7dd24",
+    "solution": "import numpy as np\nprice = np.array([250,400,320,150,500])\ncost = np.array([180,290,250,90,370])\nqty = np.array([120,85,150,210,70])\nrevenue = price * qty\nprofit = revenue - cost\ntotal_profit = np.sum(profit)\ncount = np.sum(profit >= 10_000)",
+    "error": null
+  },
+  {
+    "email": "11244334@st.neu.edu.vn",
+    "slug": "pandas-02-phan-tich-du-lieu-nhan-su-68dc0359fdd70279dba82f6e",
+    "solution": "import pandas as pd\ndf = pd.DataFrame({\n 'Ten':['A','B','C'],\n 'PhongBan':['Kinh doanh','IT','Kinh doanh'],\n 'NamKinhNghiem':[5,2,4],\n 'LuongThang':[25000000,15000000,30000000]\n})\ncount_exp = df.query('NamKinhNghiem > 3').shape[0]\ncount_sales = df.query(\"PhongBan == 'Kinh doanh' and LuongThang*12 > 250000000\").shape[0]",
+    "error": null
+  },
+  {
+    "email": "11244335@st.neu.edu.vn",
+    "slug": "numpy-02-danh-gia-hieu-suat-kinh-doanh-68dbff0efdd70279dba81f6c",
+    "solution": "import numpy as np\nsales = np.array([[600,700,650,800],[500,550,600,620],[720,710,690,730],[400,450,500,520]])\navg_region = np.mean(sales, axis=1)\ntotal_quarter = np.sum(sales, axis=0)\nabove_target = np.where(total_quarter > 650)\ngrowth = (sales[:,3]/sales[:,0] - 1)*100",
+    "error": null
+  },
+  {
+    "email": "11244335@st.neu.edu.vn",
+    "slug": "pandas-01-xu-ly-du-lieu-don-hang-68dc00c1fdd70279dba8260d",
+    "solution": "import pandas as pd\ndf = pd.DataFrame({\n 'MaDonHang':[1,2,3],\n 'TenSanPham':['Laptop','Chuột','Màn hình'],\n 'SoLuong':[2,5,1],\n 'DanhGia':[5,4,5]\n})\nprice_map = {'Laptop':18000,'Bàn phím':500,'Chuột':350,'Màn hình':4500}\ndf = df.assign(DonGia=df['TenSanPham'].map(price_map))\ndf = df.assign(ThanhTien=df['SoLuong']*df['DonGia'])\ndf = df.sort_values('ThanhTien', ascending=False)",
+    "error": null
+  },
+  {
+    "email": "11244336@st.neu.edu.vn",
+    "slug": "numpy-01-phan-tich-loi-nhuan-ban-hang-68dbc899fdd70279dba7dd24",
+    "solution": "import numpy as np\nprice = np.array([250,400,320,150,500\ncost = np.array([180,290,250,90,370])\nqty = np.array([120,85,150,210,70])\nprofit = price*qty - cost\ntotal_profit = profit.sum()\ncount = np.count_nonzero(profit >= 10000)",
+    "error": "Exited with error status 1"
+  },
+  {
+    "email": "11244336@st.neu.edu.vn",
+    "slug": "pandas-02-phan-tich-du-lieu-nhan-su-68dc0359fdd70279dba82f6e",
+    "solution": "import pandas as pd\ndf = pd.DataFrame({\n 'Ten':['A','B','C'],\n 'PhongBan':['Kinh doanh','IT','Kinh doanh'],\n 'NamKinhNghiem':[5,2,4],\n 'LuongThang':[25000000,15000000,30000000]\n})\ncount_exp = (df['NamKinhNghiem'] > 3).sum()\ndf['ThuNhapNam'] = df['LuongThang'] * 12\ncount_sales = df[(df['PhongBan']=='Kinh doanh') & (df['ThuNhapNam'] > 250000000)].shape[0]",
+    "error": null
+  }
+]
