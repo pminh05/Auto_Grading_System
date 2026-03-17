@@ -57,3 +57,7 @@ logs/
 # Temporary files
 *.tmp
 *.temp
+
+# Grading output (keep .gitkeep but not generated results)
+output/*.csv
+output/*.json

@@ -233,6 +233,16 @@ pytest tests/ -v
 
 ---
 
+## Quick Start: Batch Grading CLC11
+
+```bash
+pip install -r requirements.txt
+python scripts/grade_CLC11.py
+# Output: output/CLC11_results.csv, output/CLC11_results.json
+```
+
+---
+
 ## License
 
 MIT
