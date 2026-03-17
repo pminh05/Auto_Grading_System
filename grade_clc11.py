@@ -12,6 +12,7 @@ Usage::
 
 from __future__ import annotations
 
+import ast
 import json
 import sys
 from collections import defaultdict
@@ -38,15 +39,175 @@ TOPIC_FILE = "CLC11topic.json"
 CV_FILE = "CLC11cv.json"
 OUTPUT_FILE = "CLC11_grades.json"
 
-# A single dummy test case used to probe whether the student code runs cleanly.
-# We do NOT match output — a submission is considered "passed" when the
-# subprocess exits with code 0 (no runtime/syntax errors).
+# Fallback test case used when we cannot derive a meaningful expected output.
 DUMMY_TEST_CASE = TestCase(input="", expected_output="")
 
 
 # ---------------------------------------------------------------------------
-# Helpers
+# Output-based test case helpers
 # ---------------------------------------------------------------------------
+
+# Module-level names that should never be auto-printed (they are library refs
+# or internal helpers, not computed results).
+_SKIP_PRINT_NAMES = frozenset({"np", "pd", "os", "sys", "math", "json", "re"})
+
+# Auto-print wrapper injected after the student/reference code.
+# It converts numpy arrays and pandas objects to plain Python lists for
+# deterministic string comparison across different environments.
+_PRINT_WRAPPER = """\
+
+# --- auto-print block ---
+def __fmt(v):
+    try:
+        import numpy as __np
+        if isinstance(v, __np.ndarray):
+            lst = v.tolist()
+            def _rnd(x):
+                if isinstance(x, float):
+                    return round(x, 6)
+                if isinstance(x, list):
+                    return [_rnd(i) for i in x]
+                return x
+            return str(_rnd(lst))
+    except Exception:
+        pass
+    try:
+        import pandas as __pd
+        if isinstance(v, __pd.DataFrame):
+            return str(v.values.tolist())
+        if isinstance(v, __pd.Series):
+            return str(v.tolist())
+    except Exception:
+        pass
+    if isinstance(v, float):
+        return str(round(v, 6))
+    return str(v)
+"""
+
+
+def _get_leaf_vars(stmts: list) -> List[str]:
+    """Return top-level variable names that are "final outputs" in *stmts*.
+
+    A variable is a leaf if:
+    1. It is assigned at the top level (``Name`` target only).
+    2. It is **not** used in the RHS of any statement that comes *after* its
+       last assignment.
+    3. It is not in ``_SKIP_PRINT_NAMES``.
+
+    This ensures that only the true end-result variables are printed, not
+    intermediate computations.  Using leaf variables for comparison makes the
+    output-based test robust to different intermediate variable names used by
+    the reference and student while still detecting wrong final values.
+
+    Args:
+        stmts: Module-level AST statement list (``ast.Module.body``).
+
+    Returns:
+        Leaf variable names ordered by the position of their last assignment.
+    """
+    # Track last assignment index for each Name target
+    last_assigned_at: dict[str, int] = {}
+    for idx, stmt in enumerate(stmts):
+        if isinstance(stmt, ast.Assign):
+            for target in stmt.targets:
+                if isinstance(target, ast.Name) and target.id not in _SKIP_PRINT_NAMES:
+                    last_assigned_at[target.id] = idx
+        elif isinstance(stmt, ast.AugAssign):
+            if isinstance(stmt.target, ast.Name) and stmt.target.id not in _SKIP_PRINT_NAMES:
+                last_assigned_at[stmt.target.id] = idx
+
+    # Track every statement index where each Name is READ (used in any expression)
+    used_in_stmt: dict[str, list[int]] = {}
+    for idx, stmt in enumerate(stmts):
+        # Walk ALL sub-expressions of the statement to find Name reads.
+        # For Assign/AugAssign, walk the value (RHS); for other stmts walk everything.
+        if isinstance(stmt, ast.Assign):
+            expr_root = stmt.value
+        elif isinstance(stmt, ast.AugAssign):
+            expr_root = stmt.value
+        else:
+            expr_root = stmt
+        for node in ast.walk(expr_root):
+            if isinstance(node, ast.Name):
+                used_in_stmt.setdefault(node.id, []).append(idx)
+
+    # Leaf = last-assigned and never used in any later statement
+    leaf_vars = []
+    for var, last_idx in last_assigned_at.items():
+        uses_after = [u for u in used_in_stmt.get(var, []) if u > last_idx]
+        if not uses_after:
+            leaf_vars.append(var)
+
+    # Return in order of last assignment (most natural output order)
+    return sorted(leaf_vars, key=lambda v: last_assigned_at[v])
+
+
+def _wrap_code_for_output(code: str) -> str:
+    """Append auto-print statements for leaf (final output) variables only.
+
+    Parses *code* to identify module-level variables that are computed but
+    not subsequently consumed (leaf variables in the data-dependency graph).
+    Only those variables are printed, which makes the output comparison robust
+    to different intermediate variable names between reference and student code.
+
+    Values are emitted in a normalised format: numpy arrays converted to
+    Python lists (floats rounded to 6 dp), pandas DataFrames/Series to lists.
+
+    If *code* has a syntax error the original code is returned unchanged.
+
+    Args:
+        code: Python source code (reference or student solution).
+
+    Returns:
+        The original code with an appended auto-print block, or the original
+        code unchanged on ``SyntaxError``.
+    """
+    try:
+        tree = ast.parse(code)
+    except SyntaxError:
+        return code
+
+    leaf_vars = _get_leaf_vars(tree.body)
+
+    if not leaf_vars:
+        return code
+
+    print_lines = [_PRINT_WRAPPER]
+    for name in leaf_vars:
+        print_lines.append(f"try: print(__fmt({name}))")
+        print_lines.append(f"except (NameError, AttributeError, TypeError, ValueError): pass")
+
+    return code + "\n".join(print_lines)
+
+
+def _make_ref_test_case(
+    ref_code: str,
+    executor: SandboxExecutor,
+) -> TestCase:
+    """Run the reference solution (wrapped) and create a test case from its output.
+
+    If the reference produces non-empty stdout the resulting
+    :class:`~app.models.schemas.TestCase` uses that as ``expected_output``.
+    An empty expected output means "just check the code runs without error".
+
+    Args:
+        ref_code: Reference solution source code.
+        executor: A :class:`SandboxExecutor` for running the code.
+
+    Returns:
+        A :class:`~app.models.schemas.TestCase` with ``expected_output`` set
+        to the reference stdout (normalised by :func:`_wrap_code_for_output`).
+    """
+    wrapped = _wrap_code_for_output(ref_code)
+    probe = executor.execute(wrapped, [DUMMY_TEST_CASE])
+    if probe.test_results:
+        expected = probe.test_results[0].actual_output.rstrip("\n")
+        return TestCase(
+            input="",
+            expected_output=expected,
+            description="Reference output comparison",
+        )
+    return DUMMY_TEST_CASE
 
 
 def _empty_comparison() -> ComparisonResult:
@@ -145,7 +306,7 @@ def _grade_submission(
     topic = topics.get(slug, {})
     reference_solutions: List[str] = topic.get("solutions", [])
 
-    # --- 1. CFG comparison ---------------------------------------------------
+    # --- 1. PDG comparison ---------------------------------------------------
     comparison_result = _best_comparison(
         student_code, reference_solutions, builder, comparator
     )
@@ -158,30 +319,20 @@ def _grade_submission(
         # The submission is already known to fail at runtime; skip execution.
         exec_result = _failed_execution()
     else:
-        exec_result = executor.execute(student_code, [DUMMY_TEST_CASE])
-        # Re-evaluate "passed" purely on exit-code 0 (no stderr/timeout errors).
-        # The dummy expected_output is "" so the default logic may mark a
-        # clean-but-printing run as failed — we correct that here.
-        output_mismatch_only = len(exec_result.errors) == 0 and exec_result.failed == 1
-        if output_mismatch_only and exec_result.test_results:
-            tr = exec_result.test_results[0]
-            if tr.error is None:
-                # Exit code was 0, only "failure" was output mismatch → pass.
-                exec_result = ExecutionResult(
-                    test_results=[
-                        TestResult(
-                            test_case=tr.test_case,
-                            actual_output=tr.actual_output,
-                            passed=True,
-                            error=None,
-                            execution_time=tr.execution_time,
-                        )
-                    ],
-                    passed=1,
-                    failed=0,
-                    errors=[],
-                    total_execution_time=exec_result.total_execution_time,
-                )
+        # Derive the expected output by running the first valid reference
+        # solution through the auto-print wrapper.  This gives output-based
+        # testing even for problems that contain no explicit print() calls.
+        test_case = DUMMY_TEST_CASE
+        for ref_code in reference_solutions:
+            tc = _make_ref_test_case(ref_code, executor)
+            if tc.expected_output:  # non-empty → meaningful comparison
+                test_case = tc
+                break
+
+        # Run student code through the same auto-print wrapper so that its
+        # output can be compared with the reference's normalised output.
+        wrapped_student = _wrap_code_for_output(student_code)
+        exec_result = executor.execute(wrapped_student, [test_case])
 
     # --- 4. Scoring ----------------------------------------------------------
     score_result = engine.score(comparison_result, exec_result, errors)
