@@ -57,3 +57,6 @@ logs/
 # Temporary files
 *.tmp
 *.temp
+
+# Generated grading output
+CLC11_grades.json

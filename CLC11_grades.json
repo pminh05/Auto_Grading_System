@@ -1,0 +1,195 @@
+[
+  {
+    "email": "11244329@st.neu.edu.vn",
+    "slug": "numpy-01-phan-tich-loi-nhuan-ban-hang-68dbc899fdd70279dba7dd24",
+    "score": 100.0,
+    "graph_similarity": 1.0,
+    "tests_passed": 1,
+    "tests_total": 1,
+    "errors": [],
+    "execution_error": null
+  },
+  {
+    "email": "11244329@st.neu.edu.vn",
+    "slug": "numpy-02-danh-gia-hieu-suat-kinh-doanh-68dbff0efdd70279dba81f6c",
+    "score": 100.0,
+    "graph_similarity": 1.0,
+    "tests_passed": 1,
+    "tests_total": 1,
+    "errors": [],
+    "execution_error": null
+  },
+  {
+    "email": "11244330@st.neu.edu.vn",
+    "slug": "numpy-01-phan-tich-loi-nhuan-ban-hang-68dbc899fdd70279dba7dd24",
+    "score": 100.0,
+    "graph_similarity": 1.0,
+    "tests_passed": 1,
+    "tests_total": 1,
+    "errors": [],
+    "execution_error": null
+  },
+  {
+    "email": "11244330@st.neu.edu.vn",
+    "slug": "pandas-01-xu-ly-du-lieu-don-hang-68dc00c1fdd70279dba8260d",
+    "score": 100.0,
+    "graph_similarity": 1.0,
+    "tests_passed": 1,
+    "tests_total": 1,
+    "errors": [],
+    "execution_error": null
+  },
+  {
+    "email": "11244331@st.neu.edu.vn",
+    "slug": "numpy-01-phan-tich-loi-nhuan-ban-hang-68dbc899fdd70279dba7dd24",
+    "score": 94.0,
+    "graph_similarity": 1.0,
+    "tests_passed": 1,
+    "tests_total": 1,
+    "errors": [
+      {
+        "type": "DATA_HANDLING",
+        "severity": "MINOR",
+        "description": "Missing assignment operation (ASSIGN) — possible data handling omission."
+      },
+      {
+        "type": "ALGORITHM",
+        "severity": "MINOR",
+        "description": "Missing control-flow edge 'ASSIGN->ASSIGN'."
+      }
+    ],
+    "execution_error": null
+  },
+  {
+    "email": "11244331@st.neu.edu.vn",
+    "slug": "pandas-02-phan-tich-du-lieu-nhan-su-68dc0359fdd70279dba82f6e",
+    "score": 100.0,
+    "graph_similarity": 1.0,
+    "tests_passed": 1,
+    "tests_total": 1,
+    "errors": [],
+    "execution_error": null
+  },
+  {
+    "email": "11244332@st.neu.edu.vn",
+    "slug": "numpy-01-phan-tich-loi-nhuan-ban-hang-68dbc899fdd70279dba7dd24",
+    "score": 60.0,
+    "graph_similarity": 1.0,
+    "tests_passed": 0,
+    "tests_total": 1,
+    "errors": [],
+    "execution_error": "Exited with error status 1"
+  },
+  {
+    "email": "11244332@st.neu.edu.vn",
+    "slug": "numpy-02-danh-gia-hieu-suat-kinh-doanh-68dbff0efdd70279dba81f6c",
+    "score": 100.0,
+    "graph_similarity": 1.0,
+    "tests_passed": 1,
+    "tests_total": 1,
+    "errors": [],
+    "execution_error": null
+  },
+  {
+    "email": "11244333@st.neu.edu.vn",
+    "slug": "pandas-01-xu-ly-du-lieu-don-hang-68dc00c1fdd70279dba8260d",
+    "score": 60.0,
+    "graph_similarity": 1.0,
+    "tests_passed": 0,
+    "tests_total": 1,
+    "errors": [],
+    "execution_error": "Exited with error status 1"
+  },
+  {
+    "email": "11244333@st.neu.edu.vn",
+    "slug": "pandas-02-phan-tich-du-lieu-nhan-su-68dc0359fdd70279dba82f6e",
+    "score": 94.0,
+    "graph_similarity": 1.0,
+    "tests_passed": 1,
+    "tests_total": 1,
+    "errors": [
+      {
+        "type": "DATA_HANDLING",
+        "severity": "MINOR",
+        "description": "Missing assignment operation (ASSIGN) — possible data handling omission."
+      },
+      {
+        "type": "ALGORITHM",
+        "severity": "MINOR",
+        "description": "Missing control-flow edge 'ASSIGN->ASSIGN'."
+      }
+    ],
+    "execution_error": null
+  },
+  {
+    "email": "11244334@st.neu.edu.vn",
+    "slug": "numpy-01-phan-tich-loi-nhuan-ban-hang-68dbc899fdd70279dba7dd24",
+    "score": 100.0,
+    "graph_similarity": 1.0,
+    "tests_passed": 1,
+    "tests_total": 1,
+    "errors": [],
+    "execution_error": null
+  },
+  {
+    "email": "11244334@st.neu.edu.vn",
+    "slug": "pandas-02-phan-tich-du-lieu-nhan-su-68dc0359fdd70279dba82f6e",
+    "score": 94.0,
+    "graph_similarity": 1.0,
+    "tests_passed": 1,
+    "tests_total": 1,
+    "errors": [
+      {
+        "type": "DATA_HANDLING",
+        "severity": "MINOR",
+        "description": "Missing assignment operation (ASSIGN) — possible data handling omission."
+      },
+      {
+        "type": "ALGORITHM",
+        "severity": "MINOR",
+        "description": "Missing control-flow edge 'ASSIGN->ASSIGN'."
+      }
+    ],
+    "execution_error": null
+  },
+  {
+    "email": "11244335@st.neu.edu.vn",
+    "slug": "numpy-02-danh-gia-hieu-suat-kinh-doanh-68dbff0efdd70279dba81f6c",
+    "score": 100.0,
+    "graph_similarity": 1.0,
+    "tests_passed": 1,
+    "tests_total": 1,
+    "errors": [],
+    "execution_error": null
+  },
+  {
+    "email": "11244335@st.neu.edu.vn",
+    "slug": "pandas-01-xu-ly-du-lieu-don-hang-68dc00c1fdd70279dba8260d",
+    "score": 100.0,
+    "graph_similarity": 1.0,
+    "tests_passed": 1,
+    "tests_total": 1,
+    "errors": [],
+    "execution_error": null
+  },
+  {
+    "email": "11244336@st.neu.edu.vn",
+    "slug": "numpy-01-phan-tich-loi-nhuan-ban-hang-68dbc899fdd70279dba7dd24",
+    "score": 20.0,
+    "graph_similarity": 0.0,
+    "tests_passed": 0,
+    "tests_total": 1,
+    "errors": [],
+    "execution_error": "Exited with error status 1"
+  },
+  {
+    "email": "11244336@st.neu.edu.vn",
+    "slug": "pandas-02-phan-tich-du-lieu-nhan-su-68dc0359fdd70279dba82f6e",
+    "score": 100.0,
+    "graph_similarity": 1.0,
+    "tests_passed": 1,
+    "tests_total": 1,
+    "errors": [],
+    "execution_error": null
+  }
+]
