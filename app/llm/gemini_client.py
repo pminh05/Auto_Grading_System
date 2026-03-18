@@ -3,12 +3,11 @@
 from __future__ import annotations
 
 import ast as _ast
-import asyncio
 import json
 import logging
 from typing import List, Optional
 
-import google.generativeai as genai
+from google import genai
 
 from app.config import settings
 from app.models.schemas import ClassifiedError, ComparisonResult, GradingOutput, RepairGuide
@@ -17,31 +16,29 @@ logger = logging.getLogger(__name__)
 
 
 class GeminiClient:
-    """Wrapper around the Google Generative AI SDK for Gemini 2.0 Flash.
+    """Wrapper around the Google GenAI SDK for Gemini 2.0 Flash.
 
-    All methods are synchronous but are wrapped in ``async`` coroutines so
-    they can be ``await``-ed inside FastAPI route handlers without blocking
-    the event loop via ``asyncio.to_thread``.
+    All public methods are async coroutines that use the native async
+    interface of the ``google.genai`` SDK (``client.aio.models``).
 
     Attributes:
-        _model: The :class:`google.generativeai.GenerativeModel` instance.
+        _client: The :class:`google.genai.Client` instance.
+        _model: The model name string used for every generation request.
     """
 
-    _MODEL_NAME = "gemini-2.0-flash-preview"
-    _FALLBACK_MODEL = "gemini-2.0-flash-exp"
+    _MODEL_NAME = "gemini-2.0-flash"
 
     def __init__(self) -> None:
-        """Configure the Gemini SDK using the API key from settings."""
-        genai.configure(api_key=settings.gemini_api_key)
-        try:
-            self._model = genai.GenerativeModel(self._MODEL_NAME)
-        except Exception:  # noqa: BLE001
-            logger.warning(
-                "Model '%s' not available, falling back to '%s'.",
-                self._MODEL_NAME,
-                self._FALLBACK_MODEL,
-            )
-            self._model = genai.GenerativeModel(self._FALLBACK_MODEL)
+        """Configure the GenAI client using the API key from settings.
+
+        Unlike the old ``google.generativeai`` SDK, ``google.genai`` passes the
+        model name at call time rather than at construction time.  Any API or
+        model-availability errors are therefore caught inside :meth:`_generate`
+        and surfaced as informative placeholder strings rather than hard
+        failures.
+        """
+        self._client = genai.Client(api_key=settings.gemini_api_key)
+        self._model = self._MODEL_NAME
 
     # ------------------------------------------------------------------
     # Public API
@@ -352,7 +349,10 @@ Hướng dẫn sinh viên mà không đưa thẳng đáp án. Trả lời bằng
             Generated text or an error placeholder.
         """
         try:
-            response = await asyncio.to_thread(self._model.generate_content, prompt)
+            response = await self._client.aio.models.generate_content(
+                model=self._model,
+                contents=prompt,
+            )
             return response.text.strip()
         except Exception as exc:  # noqa: BLE001
             logger.error("Gemini API call failed: %s", exc)
