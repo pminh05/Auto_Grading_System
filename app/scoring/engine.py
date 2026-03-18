@@ -1,4 +1,11 @@
-"""Scoring engine: compute a weighted score from graph diff and test results."""
+"""Scoring engine: compute auxiliary graph and test metrics for use in LLM prompts.
+
+Note: The total_score from this engine is no longer used directly in the
+/grade response. Gemini LLM now determines the final score based on all
+pipeline inputs. This engine is retained to compute auxiliary metrics
+(graph_similarity_raw, pass_rate_raw) that are passed to the LLM prompt
+as context.
+"""
 
 from __future__ import annotations
 
@@ -14,10 +21,16 @@ from app.models.schemas import (
 
 
 class ScoringEngine:
-    """Compute a 0–100 score from graph similarity and test execution results.
+    """Compute auxiliary metrics from graph similarity and test execution results.
 
-    Score formula
-    -------------
+    These metrics are used as contextual inputs for the LLM grading prompt
+    rather than as a direct scoring formula. The ``total_score`` field in
+    the returned :class:`~app.models.schemas.ScoreResult` is kept for
+    backward-compatibility but is **not** used as the final grade —
+    Gemini LLM determines the final score via ``grade_with_llm``.
+
+    Score formula (auxiliary metrics only)
+    ----------------------------------------
     - Graph similarity component : 40 points  (similarity_score × 40)
     - Test-case pass-rate component : 40 points  (pass_rate × 40)
     - Code-quality component : 20 points  (20 - minor_error_deductions, ≥ 0)
@@ -28,7 +41,7 @@ class ScoringEngine:
     - MAJOR    :  −8 points each
     - MINOR    :  −3 points each
 
-    The final score is clamped to [0, 100].
+    The computed score is clamped to [0, 100].
     """
 
     # Weight constants

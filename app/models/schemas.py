@@ -87,6 +87,14 @@ class ComparisonResult(BaseModel):
     missing_edges: List[Dict[str, Any]] = Field(default_factory=list, description="Edges in reference but not in student")
     extra_edges: List[Dict[str, Any]] = Field(default_factory=list, description="Edges in student but not in reference")
     similarity_score: float = Field(default=0.0, ge=0.0, le=1.0, description="Graph similarity score 0.0–1.0")
+    node_diff_detail: List[Dict[str, Any]] = Field(
+        default_factory=list,
+        description="Danh sách các node khác nhau kèm label đầy đủ (direction, type, label)",
+    )
+    edge_diff_detail: List[Dict[str, Any]] = Field(
+        default_factory=list,
+        description="Danh sách các edge khác nhau kèm label đầy đủ (direction, type)",
+    )
 
 
 class ScoreResult(BaseModel):
@@ -110,6 +118,15 @@ class ExecutionResult(BaseModel):
     total_execution_time: float = Field(default=0.0, description="Total execution time in seconds")
 
 
+class GradingOutput(BaseModel):
+    """Output từ LLM cho việc chấm điểm."""
+
+    score: float = Field(..., ge=0.0, le=10.0, description="Điểm số 0–10 do LLM đánh giá")
+    feedback: str = Field(default="", description="Nhận xét chi tiết bằng tiếng Việt")
+    repair_steps: List[str] = Field(default_factory=list, description="Các bước sửa lỗi")
+    summary: str = Field(default="", description="Tóm tắt lỗi của sinh viên")
+
+
 # ---------------------------------------------------------------------------
 # API Request / Response models
 # ---------------------------------------------------------------------------
@@ -118,21 +135,22 @@ class ExecutionResult(BaseModel):
 class GradeRequest(BaseModel):
     """Request body for POST /api/v1/grade."""
 
-    question: str = Field(..., description="The problem statement / question text")
-    reference_solution: str = Field(..., description="Reference (model) solution source code")
-    student_code: str = Field(..., description="Student's submitted source code")
-    test_cases: List[TestCase] = Field(default_factory=list, description="Test cases to run against student code")
+    question: str = Field(..., description="Đề bài / nội dung câu hỏi")
+    student_code: str = Field(..., description="Code Python của sinh viên nộp")
+    test_cases: List[TestCase] = Field(default_factory=list, description="Các test case để chạy thử code sinh viên")
 
 
 class GradeResponse(BaseModel):
     """Response body for POST /api/v1/grade."""
 
-    score: ScoreResult
-    feedback: str = Field(default="", description="LLM-generated natural language feedback")
+    score: float = Field(..., ge=0.0, le=10.0, description="Điểm số 0–10 do LLM đánh giá")
+    feedback: str = Field(default="", description="Nhận xét chi tiết bằng tiếng Việt từ LLM")
     repair_guide: RepairGuide
     execution_result: ExecutionResult
     graph_diff: ComparisonResult
     errors: List[ClassifiedError] = Field(default_factory=list)
+    inferred_reference: str = Field(default="", description="Reference solution được suy ra từ code sinh viên")
+    summary: str = Field(default="", description="Tóm tắt ngắn lỗi của sinh viên")
 
 
 class ExecuteRequest(BaseModel):

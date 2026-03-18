@@ -44,20 +44,20 @@ class RepairGuideGenerator:
         reference_code: str,
         student_code: str,
     ) -> RepairGuide:
-        """Generate an ordered repair guide for the given errors.
+        """Tạo hướng dẫn sửa lỗi có thứ tự cho các lỗi đã phân loại.
 
         Args:
-            errors: Classified errors from the grading pipeline.
-            reference_code: Full reference solution source code.
-            student_code: Full student submission source code.
+            errors: Danh sách lỗi đã phân loại từ pipeline chấm điểm.
+            reference_code: Code reference (có thể là inferred reference) để làm bối cảnh.
+            student_code: Code của sinh viên.
 
         Returns:
-            A :class:`~app.models.schemas.RepairGuide` with ordered steps.
+            A :class:`~app.models.schemas.RepairGuide` với các bước được sắp xếp theo thứ tự.
         """
         if not errors:
             return RepairGuide(
                 steps=[],
-                summary="No errors detected — the submission looks correct!",
+                summary="Không phát hiện lỗi — bài nộp có vẻ đúng!",
             )
 
         # Sort errors by severity priority
@@ -104,22 +104,22 @@ class RepairGuideGenerator:
 
     @staticmethod
     def _build_summary(errors: List[ClassifiedError]) -> str:
-        """Build a brief text summary of the errors found.
+        """Xây dựng tóm tắt ngắn gọn về các lỗi tìm thấy.
 
         Args:
-            errors: List of classified errors.
+            errors: Danh sách lỗi đã phân loại.
 
         Returns:
-            A summary string.
+            Chuỗi tóm tắt bằng tiếng Việt.
         """
         critical = sum(1 for e in errors if e.severity == ErrorSeverity.CRITICAL)
         major = sum(1 for e in errors if e.severity == ErrorSeverity.MAJOR)
         minor = sum(1 for e in errors if e.severity == ErrorSeverity.MINOR)
         parts: List[str] = []
         if critical:
-            parts.append(f"{critical} critical error(s)")
+            parts.append(f"{critical} lỗi nghiêm trọng")
         if major:
-            parts.append(f"{major} major error(s)")
+            parts.append(f"{major} lỗi quan trọng")
         if minor:
-            parts.append(f"{minor} minor error(s)")
-        return f"Found {', '.join(parts)}. Please follow the steps below to fix your submission."
+            parts.append(f"{minor} lỗi nhỏ")
+        return f"Phát hiện {', '.join(parts)}. Hãy làm theo các bước dưới đây để sửa bài nộp của bạn."

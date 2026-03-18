@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 
+import networkx as nx
 from fastapi import APIRouter, HTTPException
 
 from app.error.classifier import ErrorClassifier
@@ -36,59 +37,78 @@ _scorer = ScoringEngine()
 
 @router.post("/grade", response_model=GradeResponse, summary="Grade a student submission")
 async def grade(request: GradeRequest) -> GradeResponse:
-    """Grade a student code submission against a reference solution.
+    """Grade a student code submission using an LLM-driven pipeline.
 
-    The pipeline:
-    1. Build CFGs for reference and student code.
-    2. Compare the graphs to detect structural differences.
-    3. Classify the differences into typed, severity-rated errors.
-    4. Execute the student code against the provided test cases.
-    5. Compute a weighted score.
-    6. Generate LLM feedback and a repair guide.
+    Pipeline:
+    0. Gemini suy ra reference solution từ hướng làm của sinh viên + đề bài.
+    1. Build CFG cho reference solution suy ra và code sinh viên.
+    2. So sánh đồ thị (difference detection) → ComparisonResult.
+    3. Phân loại lỗi + mức độ nghiêm trọng → List[ClassifiedError].
+    4. Chạy sandbox để lấy lỗi runtime.
+    5. Tạo repair guide từng bước.
+    6. Gemini nhận TẤT CẢ 4 đầu vào để trả về điểm + feedback + summary.
 
     Args:
         request: :class:`~app.models.schemas.GradeRequest` payload.
 
     Returns:
-        :class:`~app.models.schemas.GradeResponse` with score, feedback,
-        repair guide, execution result, and graph diff.
-
-    Raises:
-        :class:`fastapi.HTTPException`: On parse or internal errors.
+        :class:`~app.models.schemas.GradeResponse` với điểm từ LLM, feedback,
+        repair guide, execution result và graph diff.
     """
-    try:
-        # 1. Build graphs
-        ref_graph = _builder.build(request.reference_solution)
-        stu_graph = _builder.build(request.student_code)
-    except SyntaxError as exc:
-        raise HTTPException(status_code=422, detail=f"Syntax error in submitted code: {exc}") from exc
+    gemini = GeminiClient()
 
-    # 2. Compare graphs
+    # Bước 0: Gemini suy ra reference solution từ hướng làm của sinh viên
+    inferred_ref_code = await gemini.infer_reference_solution(
+        request.question, request.student_code
+    )
+
+    # Bước 1: Build CFG cho cả hai
+    try:
+        ref_graph = _builder.build(inferred_ref_code)
+    except SyntaxError:
+        logger.warning("inferred_reference has syntax error; using empty graph.")
+        ref_graph = nx.DiGraph()
+
+    try:
+        stu_graph = _builder.build(request.student_code)
+    except SyntaxError:
+        logger.warning("student_code has syntax error; using empty graph.")
+        stu_graph = nx.DiGraph()
+
+    # Bước 2: So sánh đồ thị (difference detection)
     comparison = _comparator.compare(ref_graph, stu_graph)
 
-    # 3. Classify errors
+    # Bước 3: Phân loại lỗi + mức độ nghiêm trọng
     errors = _classifier.classify(comparison)
 
-    # 4. Execute student code
+    # Bước 4: Chạy sandbox để lấy lỗi runtime
     execution_result = _executor.execute(request.student_code, request.test_cases)
 
-    # 5. Score
-    score_result = _scorer.score(comparison, execution_result, errors)
-
-    # 6. LLM feedback + repair guide
-    gemini = GeminiClient()
+    # Bước 5: Tạo repair guide từng bước
     repair_gen = RepairGuideGenerator(gemini)
+    repair_guide = await repair_gen.generate(errors, inferred_ref_code, request.student_code)
 
-    feedback = await gemini.generate_feedback(request.question, request.student_code, errors)
-    repair_guide = await repair_gen.generate(errors, request.reference_solution, request.student_code)
+    # Bước 6: LLM chấm điểm với TẤT CẢ 4 đầu vào
+    grading_output = await gemini.grade_with_llm(
+        question=request.question,
+        student_code=request.student_code,
+        inferred_reference=inferred_ref_code,
+        comparison_result=comparison,
+        errors=errors,
+        repair_guide=repair_guide,
+        execution_errors=execution_result.errors,
+        runtime_error=execution_result.errors[0] if execution_result.errors else None,
+    )
 
     return GradeResponse(
-        score=score_result,
-        feedback=feedback,
+        score=grading_output.score,
+        feedback=grading_output.feedback,
         repair_guide=repair_guide,
         execution_result=execution_result,
         graph_diff=comparison,
         errors=errors,
+        inferred_reference=inferred_ref_code,
+        summary=grading_output.summary,
     )
 
 
