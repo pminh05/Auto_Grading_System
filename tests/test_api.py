@@ -9,6 +9,7 @@ import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 
 from app.main import app
+from app.models.schemas import GradingOutput
 
 pytestmark = pytest.mark.asyncio
 
@@ -21,6 +22,17 @@ def mock_gemini():
         instance.generate_feedback = AsyncMock(return_value="Mock feedback")
         instance.generate_repair_hint = AsyncMock(return_value="Mock hint")
         instance.generate_summary = AsyncMock(return_value="Mock summary")
+        instance.infer_reference_solution = AsyncMock(
+            return_value="def add(a, b):\n    return a + b\n"
+        )
+        instance.grade_with_llm = AsyncMock(
+            return_value=GradingOutput(
+                score=8.5,
+                feedback="Bài làm tốt!",
+                repair_steps=[],
+                summary="Code đúng.",
+            )
+        )
         MockClass.return_value = instance
         # Also patch RepairGuideGenerator to use the mock client
         with patch("app.api.routes.RepairGuideGenerator") as MockRepair:
@@ -103,10 +115,9 @@ async def test_analyze_syntax_error():
 
 
 async def test_grade_endpoint(mock_gemini):
-    """POST /api/v1/grade should return a score and feedback."""
+    """POST /api/v1/grade should return a score and feedback from LLM."""
     payload = {
         "question": "Write a function that adds two numbers.",
-        "reference_solution": "def add(a, b):\n    return a + b\n",
         "student_code": "def add(a, b):\n    return a + b\n",
         "test_cases": [
             {"input": "", "expected_output": ""},
@@ -121,17 +132,42 @@ async def test_grade_endpoint(mock_gemini):
     assert "repair_guide" in data
     assert "execution_result" in data
     assert "graph_diff" in data
-    assert data["score"]["total_score"] >= 0
+    assert "inferred_reference" in data
+    assert "summary" in data
+    # score is now a float 0-10, not a ScoreResult object
+    assert isinstance(data["score"], float)
+    assert 0.0 <= data["score"] <= 10.0
 
 
-async def test_grade_syntax_error():
-    """POST /api/v1/grade with broken student code should return 422."""
+async def test_grade_endpoint_no_reference_solution(mock_gemini):
+    """POST /api/v1/grade should NOT require reference_solution in request."""
+    payload = {
+        "question": "Viết hàm tính tổng hai số.",
+        "student_code": "def tinh_tong(a, b):\n    return a + b\n",
+        "test_cases": [],
+    }
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+        resp = await client.post("/api/v1/grade", json=payload)
+    assert resp.status_code == 200
+
+
+async def test_grade_syntax_error(mock_gemini):
+    """POST /api/v1/grade with broken student code should still return 200 (graceful handling)."""
     payload = {
         "question": "test",
-        "reference_solution": "x = 1",
         "student_code": "def broken(:\n    pass",
         "test_cases": [],
     }
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         resp = await client.post("/api/v1/grade", json=payload)
-    assert resp.status_code == 422
+    # With syntax error in student code, the route now handles it gracefully
+    # (uses empty graph) instead of returning 422
+    assert resp.status_code == 200
+    data = resp.json()
+    # Should still return a valid grading response structure
+    assert "score" in data
+    assert "feedback" in data
+    assert "graph_diff" in data
+    assert "inferred_reference" in data
+    # Score must be in valid range
+    assert 0.0 <= data["score"] <= 10.0
